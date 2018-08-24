@@ -1,3 +1,5 @@
+var Snap = require('./snap-svg');
+
 var SnapStates = (function(options) {
 	'use strict';
 
@@ -15,14 +17,14 @@ var SnapStates = (function(options) {
 	var style = document.getElementById('svg-path');
 	if(!style) {
 		var head = document.getElementsByTagName('head')[0];
-		
+
 		style = document.createElement('style');
 		style.id = "svg-path";
 		style.innerHTML = 'svg path { stroke-linecap: butt; }';
 		head.appendChild(style);
 	}
-	
-	
+
+
 	//listens for changes in the dom to see if the plugin should be re-run
 	var observer = new MutationObserver(function(mutations) {
 		var elems = document.querySelectorAll(options.selector);
@@ -32,7 +34,7 @@ var SnapStates = (function(options) {
 		}
 	});
 	observer.observe(document.body, { childList:true, subtree:true, attributes:false })
-	
+
 	//make sure the svg is actually used on the dom
 	if(_this.length === 0) return;
 
@@ -90,7 +92,7 @@ var animationStateMethods = {
 				}
 			}
 
-			
+
 		});
 	},
 
@@ -109,7 +111,7 @@ var animationStateMethods = {
 		for(var state in states) {
 			var transforms = states[state];
 			if(transforms && transforms.length > 0) {
-				this.transformsLoop(transforms, elem, start, schema, state);		
+				this.transformsLoop(transforms, elem, start, schema, state);
 				this.setStatesToAnimation(animations, state, start, elem, active);
 				if(schema.initState == state) {
 					active[state] = true; //set the initial active state to true
@@ -130,18 +132,18 @@ var animationStateMethods = {
 				matrix = schema.matrix;
 
 			if(!matrix[transform.matrixElem]) matrix[transform.matrixElem] = {};
-			
+
 			if(!transform.id && !transform.waitFor) throw new Error("State transform is missing an id or waitFor");
 			if(!transform.easing) transform.easing = schema.easing;
-			if(typeof transform.easing === "string") transform.easing = schema.easingOptions[transform.easing];	
+			if(typeof transform.easing === "string") transform.easing = schema.easingOptions[transform.easing];
 			if(schema.transitionTime && !transform.transitionTime && transform.transitionTime !== 0) transform.transitionTime = schema.transitionTime;
-			
+
 			transform.animation = animationStateMethods.setTransformAnimation(transform, matrix[transform.matrixElem]);
 
 			transform.setAnimationTimout();
 
 			//set initial animations that don't have a waitfor
-			if(!transform.waitFor) start[state].push(transform);		
+			if(!transform.waitFor) start[state].push(transform);
 			transformArr.push(transform);
 		});
 
@@ -153,7 +155,7 @@ var animationStateMethods = {
 	},
 
 
-	setTransformAnimation: function(transform, matrix) {		
+	setTransformAnimation: function(transform, matrix) {
 		return function(cb, el, active, state) {
 			setTimeout(function() {
 				if(!active[state]) return;
@@ -165,7 +167,7 @@ var animationStateMethods = {
 					repeat = transform.setRepeat(cb, el, active, state),
 					transitionTime = transform.setTransitionTime(),
 					snapElems = transform.snapElem;
-					
+
 				snapElems.forEach(function(snapElem) {
 					snapElem.stop();
 
@@ -175,7 +177,7 @@ var animationStateMethods = {
 						.animatePoints(transform.points, transitionTime, snapElem)
 						.animateDrawPath(drawPath, transitionTime, snapElem)
 						.animateAttr(transform.attr, transitionTime, snapElem);
-				});	
+				});
 
 			}, transform.timeout);
 		};
@@ -195,7 +197,7 @@ var animationStateMethods = {
 	setTriggerElement: function(i, schema) {
 		var current = schema.events[i],
 			el = schema.elem;
-			
+
 		//allows for the event to be attached to an ancestor or sibling element specified in the schema
 		if(!current.selector) current.selector = schema.selector + "-animate";
 
@@ -215,7 +217,7 @@ var animationStateMethods = {
 				}
 			}
 		}
-		
+
 		return el;
 	},
 
@@ -242,20 +244,20 @@ var animationStateMethods = {
 
 		el.addEventListener(current.event, function(e) {
 			//if it's a toggle event
-			if(current.state instanceof Array) {	
+			if(current.state instanceof Array) {
 				var initState = statesArray[0],
 					toggleState = statesArray[1];
 
 				if(active[initState]) {
 					active[initState] = false;
 					active[toggleState] = true;
-					animations[toggleState]();			
+					animations[toggleState]();
 				} else {
 					active[initState] = true;
 					active[toggleState] = false;
 					animations[initState]();
 				}
-			} 
+			}
 
 			//non toggle events
 			else {
@@ -263,9 +265,9 @@ var animationStateMethods = {
 					nonToggleEvents.forEach(function(state) {
 						active[state] = state == current.state ? true : false;
 					});
-				} else if(!active[current.state]) active[current.state] = true;	
+				} else if(!active[current.state]) active[current.state] = true;
 
-				animations[current.state](); 
+				animations[current.state]();
 			}
 		});
 	},
@@ -400,12 +402,12 @@ Transform.prototype.setTransformString = function(matrix) {
 Transform.prototype.setDrawPath = function() {
 	var path = this.drawPath;
 	if(path !== undefined) {
-		if(path instanceof Object) 
+		if(path instanceof Object)
 			path = Math.floor(Math.random() * (path.max - path.min + 1) + path.min);
 
 		path += path < 0 ? 100 : -100;
 		path = path / -100;
-	}	
+	}
 	return path;
 };
 
@@ -425,35 +427,35 @@ Transform.prototype.setSnapElem = function(el) {
 	var snapElem;
 
 	//parentElement => element gives unique snap elements
-	if(el.id) snapElem = Snap.select('#' + el.id + ' ' + this.element);			
-	else snapElem = Snap.selectAll('.' + this.selector + ' ' + this.element);	
+	if(el.id) snapElem = Snap.select('#' + el.id + ' ' + this.element);
+	else snapElem = Snap.selectAll('.' + this.selector + ' ' + this.element);
 	if(!snapElem) throw new Error("missing element in transform list: " + this.element);
 
 	if(snapElem.length !== undefined) snapElem = snapElem.items;
 	if(snapElem.length === undefined) snapElem = [snapElem];
 	// if(snapElem.length !== undefined) snapElem = snapElem[0];
-	
+
 	return snapElem;
 };
 
 Transform.prototype.setRepeat = function(cb, el, active, state) {
 	var transform = this;
-	
+
 	if(transform.repeat) {
 		return function() {
 			if(transform.repeat.loopDuration) //repeat x number of times until the loopduration is met
 				transform.repeat.times = Math.ceil(transform.repeat.loopDuration / transform.totalAnimationTime) - 1;
 
-			if(transform.repeat.repeated === undefined || isNaN(transform.repeat.repeated)) 
-				transform.repeat.repeated = transform.repeat.times || 1;	
+			if(transform.repeat.repeated === undefined || isNaN(transform.repeat.repeated))
+				transform.repeat.repeated = transform.repeat.times || 1;
 
-			if(transform.repeat.repeated <= 0) 
+			if(transform.repeat.repeated <= 0)
 				delete transform.repeat.repeated;
-			
+
 			else if(!isNaN(transform.repeat.repeated)) {
 				setTimeout(function() {
 					transform.animation(cb, el, active, state);
-					if(!transform.repeat.loop || transform.repeat.loop && transform.repeat.loopDuration) 
+					if(!transform.repeat.loop || transform.repeat.loop && transform.repeat.loopDuration)
 						transform.repeat.repeated--;
 				}, transform.repeat.delay || 0);
 			}
@@ -463,7 +465,7 @@ Transform.prototype.setRepeat = function(cb, el, active, state) {
 
 Transform.prototype.animateTransform = function(transitionTime, cb, el, active, state, repeat, snapElem) {
 	var transform = this;
-	snapElem.animate({ transform: transform.transformString }, transitionTime, this.easing, function() {	
+	snapElem.animate({ transform: transform.transformString }, transitionTime, this.easing, function() {
 		if(transform.callbacks.length === 0 && cb) cb();
 		transform.callbacks.forEach(function(callback) {
 			callback(function() {
@@ -506,7 +508,7 @@ Transform.prototype.animateDrawPath = function(path, transitionTime, snapElem) {
 		snapElem.attr({ 'stroke-dasharray': lineLength + ' ' + lineLength });
 
 		//if stroke-dashoffset is pre set in the svg and greater than the actual path length
-		var offset = parseInt(snapElem.attr('stroke-dashoffset'));	
+		var offset = parseInt(snapElem.attr('stroke-dashoffset'));
 		if(offset > lineLength) snapElem.attr({ 'stroke-dashoffset': lineLength });
 
 		snapElem.animate({ strokeDashoffset: lineLength * path }, transitionTime, this.easing);
@@ -590,10 +592,10 @@ String.prototype.toCamelCase = function() {
 var animationStatesHelpers = {
 	getChildren: function(n, skipMe) {
 		var r = [];
-		for ( ; n; n = n.nextSibling ) 
+		for ( ; n; n = n.nextSibling )
 		if ( n.nodeType == 1 && n != skipMe)
-			r.push( n );        
-		return r;	
+			r.push( n );
+		return r;
 	},
 	getSiblings: function(n) {
 		return this.getChildren(n.parentNode.firstChild, n);
@@ -620,3 +622,5 @@ var animationStatesHelpers = {
 		return null;
 	}
 };
+
+module.exports = SnapStates;
